@@ -21,10 +21,15 @@ type Options = PitchOptions & {
   onFrame?: (frame: PitchFrame) => void
 }
 
-export function micErrorStatus(error: unknown): MicStatus {
+/**
+ * Map a getUserMedia failure to what the user should see. Inside an iframe,
+ * browsers report a Permissions-Policy block as NotSupportedError (Chrome) or
+ * other names, so there "unsupported" really means "blocked by the embedder".
+ */
+export function micErrorStatus(error: unknown, embedded = false): MicStatus {
   const name = error instanceof DOMException || error instanceof Error ? error.name : ''
   if (name === 'NotAllowedError' || name === 'SecurityError') return 'denied'
-  if (name === 'NotFoundError' || name === 'NotSupportedError' || name === 'TypeError') return 'unsupported'
+  if (name === 'NotFoundError' || name === 'NotSupportedError' || name === 'TypeError') return embedded ? 'denied' : 'unsupported'
   return 'error'
 }
 
@@ -34,6 +39,18 @@ export function isEmbedded(): boolean {
     return window.self !== window.top
   } catch {
     return true
+  }
+}
+
+type PolicyDocument = { permissionsPolicy?: { allowsFeature(feature: string): boolean }; featurePolicy?: { allowsFeature(feature: string): boolean } }
+
+/** True when the page's Permissions-Policy (e.g. an iframe without allow="microphone") forbids the mic. */
+export function micBlockedByPolicy(doc: PolicyDocument = document as PolicyDocument): boolean {
+  const policy = doc.permissionsPolicy ?? doc.featurePolicy
+  try {
+    return policy ? !policy.allowsFeature('microphone') : false
+  } catch {
+    return false
   }
 }
 
@@ -53,6 +70,10 @@ export function useMicPitch(options: Options = {}) {
 
   const start = useCallback(async () => {
     if (cleanupRef.current) return
+    if (micBlockedByPolicy()) {
+      setStatus('denied')
+      return
+    }
     if (!navigator.mediaDevices?.getUserMedia) {
       setStatus(window.isSecureContext ? 'unsupported' : 'denied')
       return
@@ -71,7 +92,7 @@ export function useMicPitch(options: Options = {}) {
       ctx = await resumed
     } catch (error) {
       console.warn('Microphone unavailable:', error)
-      setStatus(micErrorStatus(error))
+      setStatus(micErrorStatus(error, isEmbedded()))
       return
     }
 

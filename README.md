@@ -37,7 +37,7 @@ npm test
 npm run build
 ```
 
-`npm test` runs 35 Vitest unit tests covering note math, pitch detection on synthetic signals, roll geometry, range following, scoring, and microphone error handling. Pushing to `main` runs the tests, builds, and deploys to GitHub Pages through `.github/workflows/deploy.yml`.
+`npm test` runs 37 Vitest unit tests covering note math, pitch detection on synthetic signals, roll geometry, range following, scoring, and microphone error handling. Pushing to `main` runs the tests, builds, and deploys to GitHub Pages through `.github/workflows/deploy.yml`.
 
 When embedded on another site whose iframe blocks the microphone, the app offers a link to open itself in its own tab.
 
