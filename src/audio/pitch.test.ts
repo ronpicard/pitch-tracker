@@ -34,15 +34,25 @@ describe('detectPitch', () => {
     expect(Math.abs(cents(result.frequency, 220))).toBeLessThan(3)
   })
 
+  // With auto gain off, a guitar a metre from a laptop or phone mic often
+  // arrives at only a few thousandths RMS; that is still a note.
+  it.each([0.01, 0.005, 0.003])('hears a quiet %f-amplitude plucked tone', (amp) => {
+    const result = detectPitch(synth(110, 4096, plucked, amp), RATE)!
+    expect(result).not.toBeNull()
+    expect(Math.abs(cents(result.frequency, 110))).toBeLessThan(2)
+  })
+
   it('ignores silence and noise', () => {
     expect(detectPitch(new Float32Array(4096), RATE)).toBeNull()
-    expect(detectPitch(synth(440, 4096, Math.sin, 0.001), RATE)).toBeNull()
+    expect(detectPitch(synth(440, 4096, Math.sin, 0.0005), RATE)).toBeNull()
     let seed = 7
-    const noise = new Float32Array(4096).map(() => {
-      seed = (seed * 16807) % 2147483647
-      return seed / 2147483647 - 0.5
-    })
-    expect(detectPitch(noise, RATE)).toBeNull()
+    const noise = (amp: number) =>
+      new Float32Array(4096).map(() => {
+        seed = (seed * 16807) % 2147483647
+        return amp * (seed / 2147483647 - 0.5)
+      })
+    expect(detectPitch(noise(1), RATE)).toBeNull()
+    expect(detectPitch(noise(0.02), RATE)).toBeNull()
   })
 
   it('respects the frequency range', () => {

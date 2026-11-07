@@ -24,7 +24,9 @@ export type PitchResult = {
 const DEFAULTS: Required<PitchOptions> = {
   minFrequency: 27,
   maxFrequency: 4200,
-  minRms: 0.008,
+  // Low on purpose: the mic runs without auto gain, so real instruments are
+  // often this quiet. NSDF is scale-free, and the clarity check rejects noise.
+  minRms: 0.001,
   cutoff: 0.9,
   minClarity: 0.8,
 }

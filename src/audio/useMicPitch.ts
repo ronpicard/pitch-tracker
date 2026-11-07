@@ -33,6 +33,15 @@ export function micErrorStatus(error: unknown, embedded = false): MicStatus {
   return 'error'
 }
 
+/**
+ * Peak sample to a 0..1 meter on a -60..0 dBFS scale, so the quiet input of
+ * a mic without auto gain still visibly moves it. Exact digital silence is 0.
+ */
+export function meterLevel(peak: number): number {
+  if (!(peak > 0)) return 0
+  return Math.min(1, Math.max(0, 1 + (20 * Math.log10(peak)) / 60))
+}
+
 /** Whether the page runs inside another page's iframe (e.g. a portfolio embed). */
 export function isEmbedded(): boolean {
   try {
@@ -90,6 +99,8 @@ export function useMicPitch(options: Options = {}) {
         audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
       })
       ctx = await resumed
+      // iOS can suspend the context while it switches to recording; wake it again.
+      if (ctx.state !== 'running') await ctx.resume()
     } catch (error) {
       console.warn('Microphone unavailable:', error)
       setStatus(micErrorStatus(error, isEmbedded()))
@@ -126,7 +137,7 @@ export function useMicPitch(options: Options = {}) {
       }
       let peak = 0
       for (let i = 0; i < buffer.length; i++) peak = Math.max(peak, Math.abs(buffer[i]!))
-      const next: PitchFrame = { frequency, clarity: result?.clarity ?? 0, level: Math.min(1, peak), time: performance.now() }
+      const next: PitchFrame = { frequency, clarity: result?.clarity ?? 0, level: meterLevel(peak), time: performance.now() }
       onFrame?.(next)
       setFrame(next)
     }

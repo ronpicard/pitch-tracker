@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { micBlockedByPolicy, micErrorStatus } from './useMicPitch'
+import { meterLevel, micBlockedByPolicy, micErrorStatus } from './useMicPitch'
 
 describe('micErrorStatus', () => {
   it('maps getUserMedia failures to user-facing states', () => {
@@ -24,5 +24,15 @@ describe('micBlockedByPolicy', () => {
     expect(micBlockedByPolicy({ featurePolicy: policy(false) })).toBe(true)
     expect(micBlockedByPolicy({})).toBe(false)
     expect(micBlockedByPolicy({ permissionsPolicy: { allowsFeature: () => { throw new Error('x') } } })).toBe(false)
+  })
+})
+
+describe('meterLevel', () => {
+  it('maps peaks onto a -60..0 dB meter', () => {
+    expect(meterLevel(0)).toBe(0)
+    expect(meterLevel(1)).toBe(1)
+    expect(meterLevel(2)).toBe(1)
+    expect(meterLevel(0.001)).toBeCloseTo(0)
+    expect(meterLevel(0.01)).toBeCloseTo(1 / 3)
   })
 })
