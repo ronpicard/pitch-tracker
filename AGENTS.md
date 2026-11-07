@@ -13,6 +13,7 @@ Facts an AI agent (or new contributor) needs before changing this repo. For what
 
 - Static React 19 + TypeScript SPA with no server and no runtime dependencies beyond React; deployed to GitHub Pages at `https://ronpicard.github.io/pitch-tracker/` by `.github/workflows/deploy.yml` on push to `main`.
 - `src/audio/` holds framework-free audio code: `notes.ts` (equal-temperament note math), `pitch.ts` (McLeod pitch detection), `tone.ts` (click-free oscillator on one shared `AudioContext`), and `useMicPitch.ts` (microphone → pitch React hook). The sibling apps `instrument-tuner`, `frequency-player`, and `pitch-tracker` share copies of these files; fix a bug in all three.
+- `src/components/SuiteNav.tsx` is the app switcher shared by the three sibling apps; keep the copies identical. Layout breakpoints live in `src/styles.css`: phone (one column), phone held sideways (`max-height` + `orientation: landscape`), and desktop (`min-width`).
 - Audio only starts from a user gesture (browser autoplay rules, iOS especially).
 - The app is embedded on ronpicard.com in a sandboxed iframe whose Permissions-Policy denies the microphone; mic features must fall back to an "open full page" link when `getUserMedia` is denied inside an iframe.
 

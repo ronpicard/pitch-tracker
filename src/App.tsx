@@ -3,6 +3,7 @@ import { clampA4, frequencyToMidi, midiToFrequency, noteFromMidi, readNote } fro
 import { ToneVoice } from './audio/tone'
 import { isEmbedded, useMicPitch, type MicStatus, type PitchFrame } from './audio/useMicPitch'
 import { Roll } from './components/Roll'
+import { SuiteNav } from './components/SuiteNav'
 import { accuracy, AUTO_SPAN, centsOff, findPreset, followRange, RANGE_PRESETS, scoreWindow, trim, type Range, type Sample } from './roll'
 import { load, save } from './storage'
 
@@ -108,6 +109,7 @@ export function App() {
         <h1 className="brand">
           <span className="brand__mark" aria-hidden="true">〽</span> Pitch Tracker
         </h1>
+        <SuiteNav current="pitch-tracker" />
         <div className={`readout ${cents !== null ? `readout--${accuracy(cents)}` : ''}`}>
           <span className="readout__note">
             {reading ? (
@@ -129,7 +131,7 @@ export function App() {
         </div>
       </header>
 
-      <main>
+      <main className="layout">
         <div className="stage">
           <Roll samples={samples} now={now} range={range} windowSeconds={windowSeconds} target={target} a4={a4} onPick={pick} />
           {!listening ? (
@@ -140,6 +142,7 @@ export function App() {
           {paused ? <div className="stage__badge">Paused</div> : null}
         </div>
 
+        <aside className="side">
         <div className="bar">
           <div className="score" title={`Share of the last ${SCORE_SECONDS} seconds within 10 cents of ${targetNote ? targetNote.label : 'the nearest note'}`}>
             <strong>{stats.onPitch === null ? '—' : `${Math.round(stats.onPitch * 100)}%`}</strong>
@@ -225,6 +228,7 @@ export function App() {
             </select>
           </label>
         </section>
+        </aside>
       </main>
 
       <footer className="footer">

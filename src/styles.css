@@ -422,3 +422,190 @@ main {
     flex: 1;
   }
 }
+
+/* ---- Suite switcher, shared by the three music apps ---- */
+
+.suite {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+
+.suite__item {
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+a.suite__item:hover {
+  color: var(--text);
+  background: var(--panel-2);
+}
+
+.suite__item--on {
+  background: var(--panel-2);
+  color: var(--accent);
+}
+
+/* ---- Layout: one column on phones, two on wide screens ---- */
+
+.topbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: 'brand suite control';
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.topbar .brand {
+  grid-area: brand;
+}
+
+.topbar .suite {
+  grid-area: suite;
+  justify-self: center;
+}
+
+.topbar > :last-child {
+  grid-area: control;
+}
+
+.layout,
+.layout__primary,
+.layout__secondary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-content: start;
+}
+
+@media (max-width: 639px) {
+  .topbar {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      'brand control'
+      'suite suite';
+    gap: 10px;
+  }
+
+  .topbar > :last-child {
+    justify-self: end;
+  }
+
+  .topbar .suite {
+    justify-self: stretch;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    text-align: center;
+  }
+
+}
+
+.side {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
+@media (max-width: 639px) {
+  /* Leave room below the roll for the score and controls. */
+  .stage {
+    height: max(280px, calc(100dvh - 250px));
+  }
+}
+
+/* Phones held sideways: the roll gets almost the whole screen. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .topbar {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas: 'brand suite control';
+    margin-bottom: 8px;
+  }
+
+  .topbar .suite {
+    display: inline-flex;
+    justify-self: center;
+  }
+
+  .app {
+    padding-top: max(6px, env(safe-area-inset-top));
+  }
+
+  .topbar {
+    min-height: 0;
+  }
+
+  .brand {
+    font-size: 1rem;
+  }
+
+  .suite__item {
+    padding: 4px 10px;
+  }
+
+  .readout__note {
+    font-size: 1.6rem;
+  }
+
+  .stage {
+    height: calc(100dvh - 58px);
+    min-height: 220px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .app {
+    max-width: 1440px;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .stage {
+    height: clamp(420px, calc(100dvh - 120px), 900px);
+  }
+
+  .side {
+    position: sticky;
+    top: 16px;
+  }
+
+  .bar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .actions {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
+
+  .actions .btn {
+    flex: 1;
+  }
+
+  .panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .readout__note {
+    font-size: 3.2rem;
+  }
+
+  .readout__detail {
+    font-size: 0.95rem;
+  }
+}

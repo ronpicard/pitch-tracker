@@ -12,6 +12,8 @@ Pitch Tracker draws your voice or instrument as a live line on a piano roll. Sin
 - **On pitch** is the share of the last 10 seconds you spent within 10 cents of the target (or of the nearest note), and **avg cents** your average distance from it.
 - **Pause** freezes the roll so you can study a phrase; **Clear** wipes it.
 - The reference pitch for A4 can be set to 415, 432, 440, or 442 Hz. Range, time shown, and reference pitch are remembered.
+- **App switcher:** the links at the top open the sibling tools, Instrument Tuner (Tuner) and Frequency Player (Tones).
+- **Layout:** on desktops the roll fills the window height with the score and settings beside it; on phones it fills most of the screen, and nearly all of it when the phone is held sideways.
 
 ## How it works
 

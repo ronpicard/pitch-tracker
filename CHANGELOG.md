@@ -2,6 +2,16 @@
 
 All notable changes to Pitch Tracker are documented in this file, following the [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [1.1.0] - 2026-11-07
+
+### Added
+
+- A switcher at the top links Tuner, Tones (Frequency Player), and Pitch (Pitch Tracker), so you can move between the three music tools.
+
+### Changed
+
+- On desktops the piano roll fills the height of the window with the score, controls, and settings in a column beside it. On phones the roll fills most of the screen, and held sideways it takes nearly all of it.
+
 ## [1.0.1] - 2026-11-07
 
 ### Fixed
