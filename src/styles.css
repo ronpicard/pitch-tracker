@@ -1,15 +1,17 @@
 :root {
-  --bg: #0b0f14;
-  --panel: #131a22;
-  --panel-2: #1a232e;
-  --line: #263240;
-  --text: #e8eef5;
-  --muted: #8b9aab;
-  --accent: #ff9f43;
-  --good: #3ddc84;
-  --warn: #ffc857;
-  --bad: #ff6b6b;
-  --radius: 16px;
+  --bg: #070912;
+  --panel: #121829;
+  --panel-2: #1b2340;
+  --line: #2e3a5c;
+  --text: #f4f7ff;
+  --muted: #aab6d3;
+  --accent: #ffa62b;
+  --accent-2: #ff4f8b;
+  --accent-ink: #2b1300;
+  --good: #3dff9a;
+  --warn: #ffd23f;
+  --bad: #ff4d6d;
+  --radius: 18px;
   color-scheme: dark;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color: var(--text);
@@ -24,7 +26,7 @@
 body {
   margin: 0;
   min-height: 100dvh;
-  background: radial-gradient(ellipse at top, #211a14 0%, var(--bg) 60%) fixed;
+  background: var(--bg);
 }
 
 button,
@@ -120,7 +122,7 @@ main {
   border-radius: 999px;
   padding: 14px 20px;
   background: var(--accent);
-  color: #2b1600;
+  color: var(--accent-ink);
   font-weight: 700;
   font-size: 1.05rem;
   text-align: center;
@@ -262,7 +264,7 @@ main {
   padding: 4px 10px;
   border-radius: 999px;
   background: var(--accent);
-  color: #2b1600;
+  color: var(--accent-ink);
   font-weight: 700;
   font-size: 0.8rem;
 }
@@ -608,4 +610,179 @@ a.suite__item:hover {
   .readout__detail {
     font-size: 0.95rem;
   }
+}
+
+
+/* ---- Theme: vivid, high-contrast layer over the base styles ---- */
+
+body {
+  background:
+    radial-gradient(60vmax 42vmax at -5% -12%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 70%),
+    radial-gradient(52vmax 40vmax at 105% 0%, color-mix(in srgb, var(--accent-2) 20%, transparent), transparent 70%),
+    radial-gradient(70vmax 50vmax at 50% 125%, color-mix(in srgb, var(--accent-2) 12%, transparent), transparent 70%),
+    var(--bg);
+  background-attachment: fixed;
+}
+
+.stage,
+.score,
+.panel {
+  background: linear-gradient(180deg, #172036, var(--panel) 60%);
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--line));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 20px 44px -26px rgba(0, 0, 0, 0.9);
+}
+
+h2 {
+  color: color-mix(in srgb, var(--accent) 55%, var(--text));
+}
+
+.brand {
+  font-weight: 800;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand__mark {
+  color: inherit;
+}
+
+.suite {
+  background: rgba(10, 14, 28, 0.7);
+  border-color: var(--line);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.suite__item {
+  color: var(--muted);
+}
+
+.suite__item--on {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--accent-ink);
+}
+
+.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--accent-ink);
+  box-shadow: 0 12px 32px -12px var(--accent);
+  transition: transform 0.12s, box-shadow 0.2s;
+}
+
+.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 36px -12px var(--accent);
+}
+
+.primary:active {
+  transform: translateY(1px) scale(0.99);
+}
+
+.chip {
+  background: var(--panel-2);
+  border-color: var(--line);
+  color: var(--text);
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+
+.chip:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+}
+
+.chip--on {
+  background: color-mix(in srgb, var(--accent) 22%, var(--panel-2));
+  border-color: var(--accent);
+  color: var(--text);
+  box-shadow: 0 0 16px -6px var(--accent);
+}
+
+.select select {
+  background-color: var(--panel-2);
+  border-color: var(--line);
+}
+
+.footer {
+  color: var(--muted);
+}
+
+/* ---- Pitch Tracker flourishes ---- */
+
+.readout__note {
+  text-shadow: 0 0 24px color-mix(in srgb, var(--state) 60%, transparent);
+}
+
+.readout__detail {
+  color: var(--muted);
+}
+
+.stage {
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--line));
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.03),
+    0 24px 60px -30px rgba(0, 0, 0, 0.9),
+    0 0 80px -40px var(--accent);
+}
+
+.stage__overlay {
+  background: radial-gradient(circle at center, rgba(11, 16, 32, 0.55), rgba(7, 9, 18, 0.8));
+}
+
+.gate {
+  color: #c3cde6;
+}
+
+.stage__badge {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--accent-ink);
+}
+
+.score span {
+  color: var(--muted);
+}
+
+.score--good strong {
+  color: var(--good);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--good) 50%, transparent);
+}
+
+.score--ok strong {
+  color: var(--warn);
+}
+
+.score--off strong {
+  color: var(--bad);
+}
+
+.btn,
+.round,
+.field select {
+  background-color: var(--panel-2);
+  border-color: var(--line);
+  transition: border-color 0.15s, transform 0.08s;
+}
+
+.btn:hover:not(:disabled),
+.round:hover {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+}
+
+.btn:active:not(:disabled),
+.round:active {
+  transform: scale(0.96);
+}
+
+.btn[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--accent) 20%, var(--panel-2));
+}
+
+.field > span {
+  color: color-mix(in srgb, var(--accent) 55%, var(--text));
+}
+
+.toggle {
+  color: #c3cde6;
 }

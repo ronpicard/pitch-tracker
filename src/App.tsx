@@ -144,7 +144,7 @@ export function App() {
 
         <aside className="side">
         <div className="bar">
-          <div className="score" title={`Share of the last ${SCORE_SECONDS} seconds within 10 cents of ${targetNote ? targetNote.label : 'the nearest note'}`}>
+          <div className={`score ${stats.onPitch === null ? '' : `score--${stats.onPitch >= 0.6 ? 'good' : stats.onPitch >= 0.3 ? 'ok' : 'off'}`}`} title={`Share of the last ${SCORE_SECONDS} seconds within 10 cents of ${targetNote ? targetNote.label : 'the nearest note'}`}>
             <strong>{stats.onPitch === null ? '—' : `${Math.round(stats.onPitch * 100)}%`}</strong>
             <span>on pitch</span>
           </div>

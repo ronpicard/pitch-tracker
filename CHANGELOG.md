@@ -2,6 +2,13 @@
 
 All notable changes to Pitch Tracker are documented in this file, following the [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [1.2.0] - 2026-11-07
+
+### Changed
+
+- A brighter, higher-contrast look: a near-black background with orange and pink glows, brighter lane labels and grid in the roll, a glowing pitch line and playhead, and gradient buttons and switcher.
+- The on-pitch score turns green, amber, or red depending on how well you are doing.
+
 ## [1.1.0] - 2026-11-07
 
 ### Added

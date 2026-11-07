@@ -8,19 +8,19 @@ const HEAD_PAD = 18
 const MAX_GAP = 0.12
 
 const COLORS = {
-  bg: '#0e131a',
-  laneBlack: '#0a0e13',
-  line: '#1d2631',
-  lineC: '#33414f',
-  gutter: '#131a22',
-  label: '#c9d4e0',
-  labelMuted: '#5d6b7a',
-  target: 'rgba(255, 159, 67, 0.18)',
-  targetLine: '#ff9f43',
-  good: '#3ddc84',
-  ok: '#ffc857',
-  off: '#ff6b6b',
-  grid: 'rgba(255,255,255,0.04)',
+  bg: '#0b1020',
+  laneBlack: '#070a16',
+  line: '#1e2944',
+  lineC: '#3f5080',
+  gutter: '#10162b',
+  label: '#eef2ff',
+  labelMuted: '#8a98c2',
+  target: 'rgba(255, 166, 43, 0.2)',
+  targetLine: '#ffa62b',
+  good: '#3dff9a',
+  ok: '#ffd23f',
+  off: '#ff4d6d',
+  grid: 'rgba(160, 180, 255, 0.07)',
 }
 
 type Props = {
@@ -117,11 +117,14 @@ export function Roll({ samples, now, range, windowSeconds, target, a4, onPick }:
       ctx.lineCap = 'round'
       ctx.lineJoin = 'round'
       ctx.lineWidth = Math.max(2.5, Math.min(5, laneH * 0.25))
+      // A soft glow in the segment's own colour makes the line pop off the lanes.
+      ctx.shadowBlur = 10
       let prev: Sample | null = null
       for (const s of list) {
         if (s.t < t - windowSeconds - 1) continue
         if (s.midi !== null && prev?.midi != null && s.t - prev.t < MAX_GAP) {
           ctx.strokeStyle = COLORS[accuracy(centsOff(s.midi, target))]
+          ctx.shadowColor = ctx.strokeStyle
           ctx.beginPath()
           ctx.moveTo(xOf(prev.t), midiToY(prev.midi, shown, h))
           ctx.lineTo(xOf(s.t), midiToY(s.midi, shown, h))
@@ -130,15 +133,26 @@ export function Roll({ samples, now, range, windowSeconds, target, a4, onPick }:
         prev = s
       }
 
-      // Playhead dot on the latest pitch.
+      ctx.shadowBlur = 0
+
+      // Playhead dot on the latest pitch, with a halo.
       const last = list[list.length - 1]
       if (last?.midi != null && t - last.t < 0.2) {
         const x = xOf(last.t)
         const y = midiToY(last.midi, shown, h)
-        ctx.fillStyle = COLORS[accuracy(centsOff(last.midi, target))]
+        const color = COLORS[accuracy(centsOff(last.midi, target))]
+        ctx.fillStyle = color
+        ctx.globalAlpha = 0.25
+        ctx.beginPath()
+        ctx.arc(x, y, ctx.lineWidth * 3.2, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.globalAlpha = 1
+        ctx.shadowColor = color
+        ctx.shadowBlur = 14
         ctx.beginPath()
         ctx.arc(x, y, ctx.lineWidth * 1.4, 0, Math.PI * 2)
         ctx.fill()
+        ctx.shadowBlur = 0
       }
 
       // Note gutter on top so the trace slides under it.
