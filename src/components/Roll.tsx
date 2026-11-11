@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { isBlackKey, noteFromMidi } from '../audio/notes'
-import { accuracy, centsOff, midiToY, yToMidi, type Range, type Sample } from '../roll'
+import { accuracy, centsOff, midiToY, yToMidi, type Accuracy, type Range, type Sample } from '../roll'
 
 const GUTTER = 48
 const HEAD_PAD = 18
@@ -21,6 +21,9 @@ const COLORS = {
   ok: '#ffd23f',
   off: '#ff4d6d',
   grid: 'rgba(160, 180, 255, 0.07)',
+  singer: 'rgba(122, 162, 255, 0.5)',
+  singerAhead: 'rgba(160, 190, 255, 0.85)',
+  now: 'rgba(238, 242, 255, 0.35)',
 }
 
 type Props = {
@@ -32,13 +35,19 @@ type Props = {
   target: number | null
   a4: number
   onPick: (midi: number) => void
+  /** The singer's line for a time span, drawn as a wide band under yours. */
+  reference?: (from: number, to: number) => Sample[]
+  /** Seconds of the future shown to the right of now (to see the singer's next notes). */
+  lead?: number
+  /** Colour for each of your samples; defaults to cents from the target or nearest note. */
+  grade?: (sample: Sample & { midi: number }) => Accuracy
 }
 
 /** Canvas piano roll: note lanes up the side, your pitch drawn right to left. */
-export function Roll({ samples, now, range, windowSeconds, target, a4, onPick }: Props) {
+export function Roll({ samples, now, range, windowSeconds, target, a4, onPick, reference, lead = 0, grade }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const props = useRef({ now, range, windowSeconds, target, a4 })
-  props.current = { now, range, windowSeconds, target, a4 }
+  const props = useRef({ now, range, windowSeconds, target, a4, reference, lead, grade })
+  props.current = { now, range, windowSeconds, target, a4, reference, lead, grade }
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -58,7 +67,8 @@ export function Roll({ samples, now, range, windowSeconds, target, a4, onPick }:
       }
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-      const { now, range, windowSeconds, target } = props.current
+      const { now, range, windowSeconds, target, reference, lead, grade } = props.current
+      const gradeOf = (s: Sample & { midi: number }) => (grade ? grade(s) : accuracy(centsOff(s.midi, target)))
       // Ease the visible window so range changes glide instead of jump.
       shown = { low: shown.low + (range.low - shown.low) * 0.12, high: shown.high + (range.high - shown.high) * 0.12 }
       if (Math.abs(shown.low - range.low) < 0.01) shown = { ...range }
@@ -66,7 +76,8 @@ export function Roll({ samples, now, range, windowSeconds, target, a4, onPick }:
       const laneH = h / lanes
       const t = now()
       const plotW = w - GUTTER - HEAD_PAD
-      const xOf = (time: number) => GUTTER + plotW - ((t - time) / windowSeconds) * plotW
+      const span = windowSeconds + lead
+      const xOf = (time: number) => GUTTER + plotW - ((t + lead - time) / span) * plotW
 
       ctx.fillStyle = COLORS.bg
       ctx.fillRect(0, 0, w, h)
@@ -104,12 +115,53 @@ export function Roll({ samples, now, range, windowSeconds, target, a4, onPick }:
 
       // One-second grid moving with time.
       ctx.strokeStyle = COLORS.grid
-      for (let s = Math.ceil(t - windowSeconds); s <= t; s++) {
+      for (let s = Math.ceil(t - windowSeconds); s <= t + lead; s++) {
         const x = Math.round(xOf(s)) + 0.5
         ctx.beginPath()
         ctx.moveTo(x, 0)
         ctx.lineTo(x, h)
         ctx.stroke()
+      }
+
+      if (lead > 0) {
+        const x = Math.round(xOf(t)) + 0.5
+        ctx.strokeStyle = COLORS.now
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, h)
+        ctx.stroke()
+      }
+
+      // The singer: a wide translucent band, brighter for what is still to come.
+      if (reference) {
+        ctx.lineCap = 'round'
+        ctx.lineJoin = 'round'
+        ctx.lineWidth = Math.max(6, Math.min(16, laneH * 0.7))
+        // One path per phrase (and per past/ahead colour) so the translucent band has no overlaps.
+        let open = false
+        let ahead = false
+        let prevRef: Sample | null = null
+        const flush = () => {
+          if (open) ctx.stroke()
+          open = false
+        }
+        for (const s of reference(t - windowSeconds - 1, t + lead + 1)) {
+          const joined = s.midi !== null && prevRef?.midi != null && s.t - prevRef.t < MAX_GAP
+          if (!joined || (s.t > t) !== ahead) flush()
+          if (joined) {
+            if (!open) {
+              ahead = s.t > t
+              ctx.strokeStyle = ahead ? COLORS.singerAhead : COLORS.singer
+              ctx.beginPath()
+              ctx.moveTo(xOf(prevRef!.t), midiToY(prevRef!.midi!, shown, h))
+              open = true
+            }
+            ctx.lineTo(xOf(s.t), midiToY(s.midi!, shown, h))
+          }
+          prevRef = s
+        }
+        flush()
       }
 
       // Pitch trace, coloured per segment by how far it is from the note.
@@ -123,7 +175,7 @@ export function Roll({ samples, now, range, windowSeconds, target, a4, onPick }:
       for (const s of list) {
         if (s.t < t - windowSeconds - 1) continue
         if (s.midi !== null && prev?.midi != null && s.t - prev.t < MAX_GAP) {
-          ctx.strokeStyle = COLORS[accuracy(centsOff(s.midi, target))]
+          ctx.strokeStyle = COLORS[gradeOf(s as Sample & { midi: number })]
           ctx.shadowColor = ctx.strokeStyle
           ctx.beginPath()
           ctx.moveTo(xOf(prev.t), midiToY(prev.midi, shown, h))
@@ -140,7 +192,7 @@ export function Roll({ samples, now, range, windowSeconds, target, a4, onPick }:
       if (last?.midi != null && t - last.t < 0.2) {
         const x = xOf(last.t)
         const y = midiToY(last.midi, shown, h)
-        const color = COLORS[accuracy(centsOff(last.midi, target))]
+        const color = COLORS[gradeOf(last as Sample & { midi: number })]
         ctx.fillStyle = color
         ctx.globalAlpha = 0.25
         ctx.beginPath()

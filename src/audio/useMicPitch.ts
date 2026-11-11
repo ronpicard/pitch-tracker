@@ -53,11 +53,11 @@ export function isEmbedded(): boolean {
 
 type PolicyDocument = { permissionsPolicy?: { allowsFeature(feature: string): boolean }; featurePolicy?: { allowsFeature(feature: string): boolean } }
 
-/** True when the page's Permissions-Policy (e.g. an iframe without allow="microphone") forbids the mic. */
-export function micBlockedByPolicy(doc: PolicyDocument = document as PolicyDocument): boolean {
+/** True when the page's Permissions-Policy (e.g. an iframe without allow="microphone") forbids the mic (or another capture feature). */
+export function micBlockedByPolicy(doc: PolicyDocument = document as PolicyDocument, feature = 'microphone'): boolean {
   const policy = doc.permissionsPolicy ?? doc.featurePolicy
   try {
-    return policy ? !policy.allowsFeature('microphone') : false
+    return policy ? !policy.allowsFeature(feature) : false
   } catch {
     return false
   }

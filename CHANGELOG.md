@@ -2,6 +2,14 @@
 
 All notable changes to Pitch Tracker are documented in this file, following the [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [Unreleased]
+
+### Added
+
+- **Sing along** mode. Paste a YouTube link and the app learns the singer's notes as the video plays, by listening to the tab's audio (desktop Chrome and Edge) or through the microphone. The notes are saved for that video, and on the next play they scroll in three seconds ahead as a blue band, with your own line drawn over it and scored against the singer.
+- Live singer pitch from any song: share another tab or your computer's sound, or let the microphone hear a song playing in the room, and the lead singer's line is drawn as it plays.
+- **Count any octave** scores a part sung an octave away from the singer as on pitch and draws it in the singer's octave.
+
 ## [1.2.0] - 2026-11-07
 
 ### Changed

@@ -786,3 +786,199 @@ h2 {
 .toggle {
   color: #c3cde6;
 }
+
+/* ---- Modes: my voice / sing along with a song ---- */
+
+.modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 16px;
+  border-radius: 999px;
+  background: rgba(10, 14, 28, 0.7);
+  border: 1px solid var(--line);
+  max-width: 520px;
+}
+
+.modes__item {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 12px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.modes__item--on {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: var(--accent-ink);
+}
+
+.video {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.video__form {
+  display: flex;
+  gap: 8px;
+}
+
+.video__form input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+}
+
+.video__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: #000;
+}
+
+.video__frame--empty {
+  display: grid;
+  place-items: center;
+  aspect-ratio: auto;
+  min-height: 96px;
+  padding: 16px;
+  background: var(--panel);
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.video__frame--empty .video__player {
+  display: none;
+}
+
+.video__frame p {
+  margin: 0;
+}
+
+.video__player,
+.video__player iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.video__note {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.video__note--error {
+  color: var(--bad);
+}
+
+.linkish {
+  border: 0;
+  padding: 0;
+  margin-left: 8px;
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+  font-size: inherit;
+}
+
+.legend {
+  position: absolute;
+  top: 10px;
+  left: 58px;
+  display: flex;
+  gap: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(7, 9, 18, 0.7);
+  font-size: 0.75rem;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.legend span::before {
+  content: '';
+  display: inline-block;
+  width: 16px;
+  height: 6px;
+  margin-right: 6px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.legend__singer::before {
+  background: rgba(160, 190, 255, 0.85);
+}
+
+.legend__you::before {
+  background: var(--good);
+}
+
+.hint {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.live__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--bad);
+  box-shadow: 0 0 10px var(--bad);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.songpanel .chip {
+  padding: 8px 14px;
+}
+
+@media (min-width: 1024px) {
+  .layout--song {
+    grid-template-areas:
+      'stage video'
+      'stage side';
+    grid-template-rows: auto 1fr;
+  }
+
+  .layout--song .stage {
+    grid-area: stage;
+  }
+
+  .layout--song .video {
+    grid-area: video;
+  }
+
+  .layout--song .side {
+    grid-area: side;
+    position: static;
+  }
+}
