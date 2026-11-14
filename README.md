@@ -5,13 +5,14 @@ Pitch Tracker draws your voice or instrument as a live line on a piano roll. Sin
 ## How to use it
 
 - Tap **Start singing** and allow the microphone. Sing or play one note at a time.
-- Time runs right to left: the dot at the right edge is now, and the last 5, 10, or 20 seconds trail behind it (**Time shown**).
-- **Follow my voice** keeps the roll centred on where you are singing. Or pick a fixed range: bass, baritone, tenor, alto, soprano, or a wide C2–C6 view.
+- Time runs right to left: the dot at the right edge is now, and the last 20, 40 (the default), or 60 seconds trail behind it (**Time shown**).
+- **Follow my voice** keeps the roll centred on where you are singing, showing 3 octaves by default; **Octaves shown** changes that to 1.5, 2, 3, or 4. Or pick a fixed range: bass, baritone, tenor, alto, soprano, or a wide C2–C6 view.
+- **Line** sets how thick your pitch line is drawn: thin (the default), medium, or thick.
 - **Tap a lane** to hear that note and make it your target. The lane is highlighted, and colours and cents are then measured against the target instead of the nearest note. Tap it again to clear it, or use the **−** and **+** buttons to move the target by a semitone.
 - **Play target** repeats the reference note. **Drone** holds it continuously while you sing; use headphones so the microphone hears only you.
 - **On pitch** is the share of the last 10 seconds you spent within 10 cents of the target (or of the nearest note), and **avg cents** your average distance from it.
 - **Pause** freezes the roll so you can study a phrase; **Clear** wipes it.
-- The reference pitch for A4 can be set to 415, 432, 440, or 442 Hz. Range, time shown, and reference pitch are remembered.
+- The reference pitch for A4 can be set to 415, 432, 440, or 442 Hz. Range, octaves shown, line thickness, time shown, and reference pitch are remembered.
 - **App switcher:** the links at the top open the sibling tools, Instrument Tuner (Tuner) and Frequency Player (Tones).
 - **Layout:** on desktops the roll fills the window height with the score and settings beside it; on phones it fills most of the screen, and nearly all of it when the phone is held sideways.
 
@@ -20,9 +21,9 @@ Pitch Tracker draws your voice or instrument as a live line on a piano roll. Sin
 Switch to **Sing along** at the top.
 
 - **With a YouTube video:** paste its link and tap **Load**. The video plays inside the app.
-  1. **Listen to the video** (desktop Chrome or Edge): choose this tab in the sharing window and keep **Share tab audio** on. The video starts, and the singer's notes are drawn as a blue band as they play. They are saved for that video, so a part you have heard once is known from then on. On phones, or in other browsers, use **Listen with the mic** and play the video out loud instead.
-  2. **Sing along**: tap it, put on headphones, and play the song again (**Restart song**). The singer's next three seconds of notes scroll in from the right so you can see what is coming, and your line is drawn over theirs: green within 25 cents of the singer, yellow within a half step, red beyond. **On pitch** is the share of the last 10 seconds the singer was singing that you were on their note.
-  - You can listen and sing in the same play if you wear headphones, since the shared tab audio doesn't include your mic.
+  - **▶ Play & sing along** (desktop Chrome or Edge): choose this tab in the sharing window and keep **Share tab audio** on, and wear headphones. The app turns on your mic and starts the video, and two lines draw at once: the singer in cyan and you in orange. The singer's notes are saved for that video, so on later plays their next three seconds scroll in from the right before they sing them. **On pitch** is the share of the last 10 seconds the singer was singing that you were on their note (within a half step); the readout shows how many cents you are from them.
+  - The app can only hear the video while this tab's audio is shared, because the video plays in YouTube's own player. If you press play in the video itself without sharing, a notice says so, with a button to share.
+  - **Listen only** learns the singer's notes without your mic. On phones and other browsers, which can't share tab audio, **▶ Play & learn the notes** has the mic listen to the video playing out loud; then put on headphones, tap **Sing along**, and **Restart song**.
   - **Forget** wipes the learned notes for a video; **Remove video** unloads it.
 - **Live, with any song:** without a video, **Listen to a tab or app** shares another browser tab (Spotify, SoundCloud, anything) or, on Windows and ChromeOS, your whole screen with its system audio; **Listen with the mic** hears a song playing in the room. The singer's line appears live. With tab or system audio you can sing along at the same time through the mic (wear headphones).
 - **Count any octave** (on by default) scores a part sung an octave or two away from the singer as on pitch, and draws your line in the singer's octave so it stays on screen.
@@ -55,7 +56,7 @@ npm test
 npm run build
 ```
 
-`npm test` runs 74 Vitest unit tests covering note math, pitch detection on synthetic signals, singer detection in synthetic mixes (a melody over bass and chords, and over a louder hard-panned instrument), learned-melody storage, the video clock, YouTube link parsing, roll geometry, range following, scoring, and microphone error handling. Pushing to `main` runs the tests, builds, and deploys to GitHub Pages through `.github/workflows/deploy.yml`.
+`npm test` runs 77 Vitest unit tests covering note math, pitch detection on synthetic signals, singer detection in synthetic mixes (a melody over bass and chords, and over a louder hard-panned instrument), learned-melody storage, the video clock, YouTube link parsing, roll geometry, range following, scoring, and microphone error handling. Pushing to `main` runs the tests, builds, and deploys to GitHub Pages through `.github/workflows/deploy.yml`.
 
 When embedded on another site whose iframe blocks the microphone or screen sharing, the app offers a link to open itself in its own tab.
 

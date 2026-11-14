@@ -5,13 +5,32 @@ import { isEmbedded, useMicPitch, type MicStatus, type PitchFrame } from './audi
 import { canCaptureTabAudio, useSongPitch, type SongSource, type SongStatus } from './audio/useSongPitch'
 import { Roll } from './components/Roll'
 import { SuiteNav } from './components/SuiteNav'
-import { accuracy, AUTO_SPAN, centsOff, findPreset, followRange, RANGE_PRESETS, scoreWindow, trim, type Range, type Sample } from './roll'
+import {
+  accuracy,
+  centsOff,
+  findPreset,
+  followRange,
+  LINE_WIDTHS,
+  OCTAVE_CHOICES,
+  parseLineWidth,
+  parseOctaves,
+  RANGE_PRESETS,
+  resizeRange,
+  scoreWindow,
+  trim,
+  type LineWidth,
+  type Range,
+  type Sample,
+} from './roll'
 import { centsFromSinger, MelodyTrack, octaveShift, parseYouTubeId, scoreAgainst, singAlongAccuracy } from './song'
 import { load, save } from './storage'
 import { useYouTube } from './youtube'
 
-const WINDOWS = [5, 10, 20]
-const KEEP_SECONDS = 60
+/** Seconds of history the roll can show; a saved choice not in this list falls back to the default. */
+const WINDOWS = [20, 40, 60]
+const DEFAULT_WINDOW = 40
+/** History kept: the longest window plus a margin, so the left edge never runs dry. */
+const KEEP_SECONDS = 65
 const SCORE_SECONDS = 10
 /** Seconds of the singer's upcoming notes shown ahead of now when a video is loaded. */
 const LEAD_SECONDS = 3
@@ -22,12 +41,17 @@ const songKey = (id: string) => `pt.song.${id}`
 
 export function App() {
   const [presetId, setPresetId] = useState(() => findPreset(load('pt.range')).id)
-  const [windowSeconds, setWindowSeconds] = useState(() => (WINDOWS.includes(Number(load('pt.window'))) ? Number(load('pt.window')) : 10))
+  const [windowSeconds, setWindowSeconds] = useState(() => (WINDOWS.includes(Number(load('pt.window'))) ? Number(load('pt.window')) : DEFAULT_WINDOW))
   const [a4, setA4] = useState(() => clampA4(Number(load('pt.a4') ?? 440)))
   const [target, setTarget] = useState<number | null>(null)
   const [drone, setDrone] = useState(false)
   const [paused, setPaused] = useState(false)
-  const [autoRange, setAutoRange] = useState<Range>({ low: 52, high: 52 + AUTO_SPAN })
+  const [octaves, setOctaves] = useState(() => parseOctaves(load('pt.octaves')))
+  const [lineWidth, setLineWidth] = useState<LineWidth>(() => parseLineWidth(load('pt.line')))
+  const span = Math.round(octaves * 12)
+  const spanRef = useRef(span)
+  spanRef.current = span
+  const [autoRange, setAutoRange] = useState<Range>(() => resizeRange({ low: 52, high: 70 }, span))
   const [mode, setMode] = useState<Mode>(() => (load('pt.mode') === 'song' ? 'song' : 'voice'))
   const [videoId, setVideoId] = useState<string | null>(() => parseYouTubeId(load('pt.video') ?? ''))
   const [link, setLink] = useState(() => (videoId ? `https://youtu.be/${videoId}` : ''))
@@ -73,7 +97,7 @@ export function App() {
 
   const follow = useCallback((midi: number | null) => {
     setAutoRange((r) => {
-      const next = followRange(r, midi)
+      const next = followRange(r, midi, spanRef.current)
       return next.low === r.low ? r : next
     })
   }, [])
@@ -128,6 +152,11 @@ export function App() {
 
   useEffect(() => save('pt.range', presetId), [presetId])
   useEffect(() => save('pt.window', String(windowSeconds)), [windowSeconds])
+  useEffect(() => save('pt.line', lineWidth), [lineWidth])
+  useEffect(() => {
+    save('pt.octaves', String(octaves))
+    setAutoRange((r) => resizeRange(r, span))
+  }, [octaves, span])
   useEffect(() => save('pt.a4', String(a4)), [a4])
   useEffect(() => save('pt.mode', mode), [mode])
   useEffect(() => save('pt.octave', anyOctave ? '1' : '0'), [anyOctave])
@@ -260,13 +289,28 @@ export function App() {
 
   const singerAt = useCallback((t: number) => track.current.at(t), [])
   const reference = useCallback((from: number, to: number) => track.current.between(from, to), [])
-  const gradeVsSinger = useCallback(
-    (s: Sample & { midi: number }) => {
-      const singer = track.current.at(s.t)
-      return singer === null ? 'ok' : singAlongAccuracy(centsFromSinger(s.midi, singer, anyOctave))
-    },
-    [anyOctave],
-  )
+
+  // A YouTube video plays in YouTube's own frame, so the app hears it only while
+  // this tab's audio is shared (or the mic listens). Re-check every half second
+  // while it plays unheard, to say so instead of showing an empty roll.
+  const [, setTick] = useState(0)
+  const playingUnheard = onVideo && video.playing && song.status !== 'listening'
+  useEffect(() => {
+    if (!playingUnheard) return
+    const timer = window.setInterval(() => setTick((n) => n + 1), 500)
+    return () => window.clearInterval(timer)
+  }, [playingUnheard])
+  const showDeaf = playingUnheard && track.current.between(now() - 1.5, now() + 0.5).every((s) => s.midi === null)
+
+  /** One tap: hear the video (tab audio, or the mic on phones), turn on your mic if possible, then play. */
+  const playAndSing = async () => {
+    const tabAudio = canCaptureTabAudio()
+    if (!tabAudio && listening) mic.stop()
+    const ok = await song.start(tabAudio ? 'this-tab' : 'mic')
+    if (!ok) return
+    if (tabAudio && !listening) await mic.start()
+    video.play()
+  }
 
   const frame = mic.frame
   const reading = frame.frequency ? readNote(frame.frequency, a4) : null
@@ -362,13 +406,24 @@ export function App() {
             now={now}
             range={range}
             windowSeconds={windowSeconds}
+            lineWidth={LINE_WIDTHS[lineWidth]}
             target={mode === 'song' ? null : target}
             a4={a4}
             onPick={pick}
             reference={mode === 'song' ? reference : undefined}
             lead={onVideo ? LEAD_SECONDS : 0}
-            grade={mode === 'song' ? gradeVsSinger : undefined}
+            solo={mode === 'song'}
           />
+          {showDeaf ? (
+            <div className="notice" role="status">
+              <p>
+                <strong>🔇 The app can’t hear this video yet.</strong> It plays in YouTube’s own player, and your browser only lets the app hear it when you share this tab’s audio.
+              </p>
+              <button type="button" className="chip chip--on" onClick={() => void playAndSing()}>
+                {canCaptureTabAudio() ? '🎧 Share the audio and sing along' : '🎙️ Listen with the mic'}
+              </button>
+            </div>
+          ) : null}
           {showGate ? (
             <div className="stage__overlay">
               {mode === 'voice' ? (
@@ -441,6 +496,7 @@ export function App() {
               })
             }}
             onSing={() => void mic.start()}
+            onPlayAndSing={() => void playAndSing()}
             onRestart={video.restart}
           />
         ) : null}
@@ -489,6 +545,37 @@ export function App() {
               ))}
             </select>
           </label>
+          <div className="field">
+            <span>Octaves shown</span>
+            <div className="row" role="radiogroup" aria-label="Octaves shown">
+              {OCTAVE_CHOICES.map((o) => (
+                <button
+                  key={o}
+                  type="button"
+                  role="radio"
+                  aria-checked={octaves === o}
+                  className={`chip ${octaves === o ? 'chip--on' : ''}`}
+                  onClick={() => {
+                    setOctaves(o)
+                    // A fixed range ignores this, so switch back to following your voice.
+                    setPresetId('auto')
+                  }}
+                >
+                  {o}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="field">
+            <span>Line</span>
+            <div className="row" role="radiogroup" aria-label="Line thickness">
+              {(Object.keys(LINE_WIDTHS) as LineWidth[]).map((w) => (
+                <button key={w} type="button" role="radio" aria-checked={lineWidth === w} className={`chip ${lineWidth === w ? 'chip--on' : ''}`} onClick={() => setLineWidth(w)}>
+                  {w[0]!.toUpperCase() + w.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="field">
             <span>Time shown</span>
             <div className="row" role="radiogroup" aria-label="Time shown">
@@ -566,10 +653,11 @@ type SongControlsProps = {
   onAnyOctave: (on: boolean) => void
   onListen: (source: SongSource) => void
   onSing: () => void
+  onPlayAndSing: () => void
   onRestart: () => void
 }
 
-function SongControls({ hasVideo, playing, song, singerLive, listening, micStatus, micBusyWithSong, anyOctave, onAnyOctave, onListen, onSing, onRestart }: SongControlsProps) {
+function SongControls({ hasVideo, playing, song, singerLive, listening, micStatus, micBusyWithSong, anyOctave, onAnyOctave, onListen, onSing, onPlayAndSing, onRestart }: SongControlsProps) {
   const tabAudio = canCaptureTabAudio()
   const songOn = song.status === 'listening'
   const blocked = (song.status === 'denied' || micStatus === 'denied') && isEmbedded()
@@ -590,9 +678,19 @@ function SongControls({ hasVideo, playing, song, singerLive, listening, micStatu
           </div>
         ) : (
           <div className="row">
+            {hasVideo ? (
+              <button
+                type="button"
+                className="chip chip--on"
+                onClick={onPlayAndSing}
+                title={tabAudio ? 'Share this tab’s audio, turn on your mic, and play the video' : 'Listen to the video through the mic and play it'}
+              >
+                {tabAudio ? '▶ Play & sing along' : '▶ Play & learn the notes'}
+              </button>
+            ) : null}
             {hasVideo && tabAudio ? (
-              <button type="button" className="chip chip--on" onClick={() => onListen('this-tab')} title="Share this tab with its audio so the app can hear the video">
-                🎧 Listen to the video
+              <button type="button" className="chip" onClick={() => onListen('this-tab')} title="Share this tab with its audio so the app can hear the video, without your mic">
+                🎧 Listen only
               </button>
             ) : null}
             {!hasVideo && tabAudio ? (
@@ -616,8 +714,8 @@ function SongControls({ hasVideo, playing, song, singerLive, listening, micStatu
                   ? null
                   : hasVideo
                   ? tabAudio
-                    ? 'Choose this tab and keep “Share tab audio” on. The video plays and its singer’s notes are learned and saved as they play, so next time you see them coming.'
-                    : 'Play the video out loud; the mic learns the singer’s notes and saves them, so next time you see them coming.'
+                    ? 'In the sharing window choose this tab and keep “Share tab audio” on; wear headphones. The singer’s line (cyan) and yours (orange) draw together, and the singer’s notes are saved, so next time you see them coming.'
+                    : 'The mic listens to the video playing out loud and saves the singer’s notes. Then put on headphones and sing along on the next play.'
                   : tabAudio
                     ? 'Pick the tab playing the song (or your entire screen with system audio) and its singer’s line appears live. Keep Pitch Tracker visible beside it.'
                     : 'Play a song out loud near your phone and its singer’s line appears live.'}

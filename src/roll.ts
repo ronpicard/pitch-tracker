@@ -22,8 +22,25 @@ export const RANGE_PRESETS: readonly RangePreset[] = [
   { id: 'wide', name: 'Wide · C2–C6', range: { low: 36, high: 84 } },
 ]
 
-/** Semitones visible when following the voice. */
-export const AUTO_SPAN = 18
+/** Octaves you can choose to see when following the voice. */
+export const OCTAVE_CHOICES = [1.5, 2, 3, 4] as const
+export const DEFAULT_OCTAVES = 3
+
+/** Semitones visible when following the voice, by default. */
+export const AUTO_SPAN = DEFAULT_OCTAVES * 12
+
+/** Pitch-line widths in CSS pixels. */
+export const LINE_WIDTHS = { thin: 1.5, medium: 2.5, thick: 4 } as const
+export type LineWidth = keyof typeof LINE_WIDTHS
+
+export function parseOctaves(value: string | null): number {
+  const n = Number(value)
+  return (OCTAVE_CHOICES as readonly number[]).includes(n) ? n : DEFAULT_OCTAVES
+}
+
+export function parseLineWidth(value: string | null): LineWidth {
+  return value !== null && Object.hasOwn(LINE_WIDTHS, value) ? (value as LineWidth) : 'thin'
+}
 
 export function findPreset(id: string | null): RangePreset {
   return RANGE_PRESETS.find((p) => p.id === id) ?? RANGE_PRESETS[0]!
@@ -38,6 +55,13 @@ export function midiToY(midi: number, range: Range, height: number): number {
 export function yToMidi(y: number, range: Range, height: number): number {
   const lanes = range.high - range.low + 1
   return range.low - 0.5 + ((height - y) / height) * lanes
+}
+
+/** Grow or shrink a range to `span` semitones around its middle, kept on the piano. */
+export function resizeRange(current: Range, span: number): Range {
+  const middle = (current.low + current.high) / 2
+  const low = Math.max(12, Math.min(108 - span, Math.round(middle - span / 2)))
+  return { low, high: low + span }
 }
 
 /**

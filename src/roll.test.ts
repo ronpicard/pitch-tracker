@@ -1,5 +1,20 @@
 import { describe, expect, it } from 'vitest'
-import { accuracy, AUTO_SPAN, centsOff, findPreset, followRange, midiToY, RANGE_PRESETS, scoreWindow, trim, yToMidi, type Sample } from './roll'
+import {
+  accuracy,
+  AUTO_SPAN,
+  centsOff,
+  findPreset,
+  followRange,
+  midiToY,
+  parseLineWidth,
+  parseOctaves,
+  RANGE_PRESETS,
+  resizeRange,
+  scoreWindow,
+  trim,
+  yToMidi,
+  type Sample,
+} from './roll'
 
 describe('roll geometry', () => {
   const range = { low: 60, high: 71 }
@@ -14,6 +29,29 @@ describe('roll geometry', () => {
     expect(findPreset('tenor').range).toEqual({ low: 48, high: 72 })
     expect(findPreset('nope').id).toBe('auto')
     for (const p of RANGE_PRESETS) if (p.range) expect(p.range.high).toBeGreaterThan(p.range.low)
+  })
+})
+
+describe('view settings', () => {
+  it('shows three octaves by default', () => {
+    expect(AUTO_SPAN).toBe(36)
+    expect(parseOctaves(null)).toBe(3)
+    expect(parseOctaves('4')).toBe(4)
+    expect(parseOctaves('1.5')).toBe(1.5)
+    expect(parseOctaves('7')).toBe(3)
+  })
+
+  it('defaults to a thin line and ignores unknown widths', () => {
+    expect(parseLineWidth(null)).toBe('thin')
+    expect(parseLineWidth('thick')).toBe('thick')
+    expect(parseLineWidth('toString')).toBe('thin')
+  })
+
+  it('resizes a range around its middle without leaving the piano', () => {
+    expect(resizeRange({ low: 54, high: 72 }, 36)).toEqual({ low: 45, high: 81 })
+    expect(resizeRange({ low: 45, high: 81 }, 18)).toEqual({ low: 54, high: 72 })
+    expect(resizeRange({ low: 12, high: 30 }, 48)).toEqual({ low: 12, high: 60 })
+    expect(resizeRange({ low: 90, high: 108 }, 48)).toEqual({ low: 60, high: 108 })
   })
 })
 

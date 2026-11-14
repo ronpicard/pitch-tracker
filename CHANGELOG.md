@@ -9,6 +9,17 @@ All notable changes to Pitch Tracker are documented in this file, following the 
 - **Sing along** mode. Paste a YouTube link and the app learns the singer's notes as the video plays, by listening to the tab's audio (desktop Chrome and Edge) or through the microphone. The notes are saved for that video, and on the next play they scroll in three seconds ahead as a blue band, with your own line drawn over it and scored against the singer.
 - Live singer pitch from any song: share another tab or your computer's sound, or let the microphone hear a song playing in the room, and the lead singer's line is drawn as it plays.
 - **Count any octave** scores a part sung an octave away from the singer as on pitch and draws it in the singer's octave.
+- **Octaves shown** (1.5, 2, 3, or 4) and **Line** (thin, medium, or thick) settings for the roll.
+
+### Changed
+
+- The roll shows 3 octaves when following your voice, up from 1.5, and draws your pitch line thinner by default.
+- **Time shown** offers 20, 40, or 60 seconds of history, with 40 as the default (was 5, 10, or 20).
+- In **Sing along**, the singer and you are drawn as two separate lines in fixed colours, cyan for the singer and orange for you, with the singer's current note marked too. How close you are shows in the readout and the on-pitch score.
+
+### Fixed
+
+- Pressing play on a pasted YouTube video showed no singer line, because the app can only hear the video while the tab's audio is shared. A new **Play & sing along** button shares the audio, turns on your mic, and starts the video in one tap, and a notice now explains when a video is playing unheard.
 
 ## [1.2.0] - 2026-11-07
 
